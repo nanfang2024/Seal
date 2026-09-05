@@ -16,6 +16,6 @@ dependencyResolutionManagement {
         mavenLocal()
     }
 }
-rootProject.name = "Seal"
-include (":app")
+rootProject.name = "WuHen"
+include(":app")
 include(":color")

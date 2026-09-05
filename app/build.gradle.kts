@@ -41,13 +41,13 @@ android {
         }
     }
 
-    buildFeatures { buildConfig = true }
+    buildFeatures(buildConfig = true)
 
     defaultConfig {
-        applicationId = "com.junkfood.seal"
-        minSdk = 24
+        applicationId = "com.wu.hen"
+        minSdk = 26
         targetSdk = 35
-        versionCode = 200_000_150
+        versionCode = 100_000_001
         check(versionCode == currentVersionCode)
 
         versionName = baseVersionName
@@ -59,7 +59,7 @@ android {
                 abi {
                     isEnable = true
                     reset()
-                    include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+                    include("arm64-v8a", "armeabi-v7a")
                     isUniversalApk = true
                 }
             }
@@ -110,7 +110,7 @@ android {
             }
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            resValue("string", "app_name", "Seal Debug")
+            resValue("string", "app_name", "无痕 Debug")
         }
     }
 
@@ -125,12 +125,7 @@ android {
         create("githubPreview") {
             dimension = "publishChannel"
             applicationIdSuffix = ".preview"
-            resValue("string", "app_name", "Seal Preview")
-        }
-
-        create("fdroid") {
-            dimension = "publishChannel"
-            versionName = "$baseVersionName-(F-Droid)"
+            resValue("string", "app_name", "无痕 Preview")
         }
     }
 
@@ -139,7 +134,7 @@ android {
     applicationVariants.all {
         outputs.all {
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                "Seal-${defaultConfig.versionName}-${name}.apk"
+                "WuHen-${defaultConfig.versionName}-${name}.apk"
         }
     }
 
@@ -151,7 +146,7 @@ android {
     }
     androidResources { generateLocaleConfig = true }
 
-    namespace = "com.junkfood.seal"
+    namespace = "com.wu.hen"
 }
 
 ktfmt { kotlinLangStyle() }
@@ -173,8 +168,7 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(libs.koin.android)
-    implementation(libs.koin.compose)
+    implementation(libs.modern.di)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
@@ -182,9 +176,9 @@ dependencies {
 
     implementation(libs.okhttp)
 
-    implementation(libs.bundles.youtubedlAndroid)
-
     implementation(libs.mmkv)
+
+    implementation(libs.datastore.preferences)
 
     testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext)
