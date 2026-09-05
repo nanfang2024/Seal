@@ -1,22 +1,13 @@
 package com.wu.hen.data.models
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 /**
- * Represents video information extracted from a video platform
- * @param url Original video URL that was parsed
- * @param title Video title
- * @param author Video author/creator
- * @param thumbnailUrl URL for video thumbnail image
- * @param durationSeconds Video duration in seconds
- * @param platformName Name of the source platform (e.g., "douyin", "bilibili")
- * @param formatFormat Container format (mp4, mov, etc.)
+ * 从视频平台解析出的视频信息
  */
 @Serializable
 data class VideoInfo(
-    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
+    val id: String = java.util.UUID.randomUUID().toString(),
     val url: String,
     val title: String,
     val author: String,
@@ -26,28 +17,29 @@ data class VideoInfo(
     val availableFormats: List<VideoFormatOption>,
 ) {
     /**
-     * Get the preferred format based on user preference
+     * 按用户偏好画质选取最合适的格式
      */
     fun getPreferredFormat(preferredQuality: VideoQuality): VideoFormatOption? {
         return when (preferredQuality) {
             VideoQuality.HIGHEST -> availableFormats.maxByOrNull { it.bitrate ?: 0 }
-            VideoQuality.LOWEST -> availableFormats.minByOrNull { it.bitrate ?: 0 }
-            else -> availableFormats.find { it.quality == preferredQuality }
-                    ?: availableFormats.firstOrNull()
+            else ->
+                availableFormats.find { it.quality == preferredQuality }
+                    ?: availableFormats.minByOrNull { it.bitrate ?: 0 }
         }
     }
 }
 
 /**
- * Represents different quality/format options for a video
+ * 单个可下载的画质/格式选项
  */
 @Serializable
 data class VideoFormatOption(
     val formatId: String,
+    val url: String,
     val quality: VideoQuality,
-    val resolution: Pair<Int, Int>? = null, // width, height
+    val resolution: Pair<Int, Int>? = null, // 宽, 高
     val extension: String = "mp4",
-    val bitrate: Int? = null, // in kbps
+    val bitrate: Int? = null, // kbps
     val fps: Int? = null,
     val filesize: Long? = null,
     val isAudioOnly: Boolean = false,
@@ -55,7 +47,7 @@ data class VideoFormatOption(
 )
 
 /**
- * Quality level enum for video downloads
+ * 画质档位
  */
 enum class VideoQuality(val displayName: String) {
     HIGHEST("最高画质"),
@@ -64,15 +56,15 @@ enum class VideoQuality(val displayName: String) {
     HD_720P("720p 高清"),
     SD_480P("480p 标准"),
     LOW_360P("360p 流畅"),
-    AUDIO_ONLY("仅音频")
+    AUDIO_ONLY("仅音频"),
 }
 
 /**
- * Download task represents a download job in progress or completed
+ * 下载任务（进行中或已完成）
  */
 @Serializable
 data class DownloadTask(
-    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
+    val id: String = java.util.UUID.randomUUID().toString(),
     val videoInfo: VideoInfo,
     val selectedFormat: VideoFormatOption,
     val status: DownloadStatus = DownloadStatus.PENDING,
@@ -85,54 +77,42 @@ data class DownloadTask(
     val retryCount: Int = 0,
     val priority: Int = 0,
 ) {
-    /**
-     * Get download progress percentage (0-100)
-     */
+    /** 下载进度百分比（0-100） */
     val progressPercentage: Float
-        get() = if (fileSizeBytes > 0) {
-            (downloadedBytes.toFloat() / fileSizeBytes) * 100
-        } else {
-            0f
-        }
+        get() = if (fileSizeBytes > 0) (downloadedBytes.toFloat() / fileSizeBytes) * 100 else 0f
 
-    /**
-     * Check if download is complete
-     */
+    /** 是否已完成 */
     val isCompleted: Boolean
         get() = status == DownloadStatus.COMPLETED
 
-    /**
-     * Check if download can be resumed
-     */
+    /** 是否可续传 */
     val canResume: Boolean
         get() = status == DownloadStatus.PAUSED && downloadedBytes > 0
 }
 
 /**
- * Enum representing download task states
+ * 下载任务状态机
  */
-enum class DownloadStatus {
-    PENDING,      // Added to queue but not started
-    DOWNLOADING,  // Currently downloading
-    PAUSED,       // Download paused by user
-    COMPLETED,    // Download finished successfully
-    FAILED,       // Download failed
-    CANCELLED     // Download cancelled by user
+enum class DownloadStatus(val displayName: String) {
+    PENDING("排队中"),
+    DOWNLOADING("下载中"),
+    PAUSED("已暂停"),
+    COMPLETED("已完成"),
+    FAILED("失败"),
+    CANCELLED("已取消"),
 }
 
 /**
- * User preferences stored in DataStore
+ * 用户偏好（DataStore 持久化）
  */
-@Serializable
 data class UserPreferences(
     val defaultQuality: VideoQuality = VideoQuality.FHD_1080P,
     val preferredStoragePath: String? = null,
     val autoDownloadOnParse: Boolean = false,
     val enableNotifications: Boolean = true,
     val enableHapticFeedback: Boolean = true,
-    val enabledPlatforms: Set<String> = setOf(
-        "douyin", "kuaishou", "bilibili", "xiaohongshu", "pipixia"
-    ),
+    val enabledPlatforms: Set<String> =
+        setOf("douyin", "kuaishou", "bilibili", "xiaohongshu", "pipixia"),
     val filenameTemplate: String = "{title} - {author}",
     val overwriteFiles: Boolean = false,
     val compactMode: Boolean = false,
@@ -144,12 +124,12 @@ data class UserPreferences(
 }
 
 /**
- * Statistics for storage management
+ * 存储统计
  */
 data class StorageStats(
     val totalUsedBytes: Long,
     val downloadCount: Int,
-    val recentDownloads: List<RecentDownloadItem>
+    val recentDownloads: List<RecentDownloadItem>,
 )
 
 data class RecentDownloadItem(
@@ -157,5 +137,5 @@ data class RecentDownloadItem(
     val title: String,
     val fileSizeBytes: Long,
     val timestampMillis: Long,
-    val thumbnailUrl: String? = null
+    val thumbnailUrl: String? = null,
 )

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- MMKV 与 DataStore 数据不参与云备份 -->
+    <exclude domain="file" path="mmkv" />
+    <exclude domain="file" path="datastore" />
+</full-backup-content>

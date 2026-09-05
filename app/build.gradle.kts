@@ -41,15 +41,13 @@ android {
         }
     }
 
-    buildFeatures(buildConfig = true)
+    buildFeatures { buildConfig = true }
 
     defaultConfig {
         applicationId = "com.wu.hen"
         minSdk = 26
         targetSdk = 35
-        versionCode = 100_000_001
-        check(versionCode == currentVersionCode)
-
+        versionCode = currentVersionCode
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -168,7 +166,8 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(libs.modern.di)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

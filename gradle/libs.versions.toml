@@ -35,7 +35,7 @@ mmkv = "1.3.12"
 
 ktfmt = "0.20.1"
 
-modernDI = "1.0.0"
+koin = "4.0.0"
 datastore = "1.0.0"
 
 [libraries]
@@ -91,7 +91,8 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 
-modern-di = { group = "io.github.zhuangjw.modern", name = "modern-di", version.ref = "modernDI" }
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
 
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }

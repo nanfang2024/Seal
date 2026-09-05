@@ -2,10 +2,13 @@ package com.wu.hen
 
 import android.app.Application
 import com.tencent.mmkv.MMKV
+import com.wu.hen.di.appModule
+import com.wu.hen.platform.common.PlatformRegistry
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 
 /**
- * Main application class for WuHen app
- * Initializes global dependencies and configurations
+ * 应用入口：初始化 MMKV、Koin 与平台解析器注册表
  */
 class WuHenApp : Application() {
 
@@ -18,10 +21,16 @@ class WuHenApp : Application() {
         super.onCreate()
         instance = this
 
-        // Initialize MMKV for fast shared preferences
+        // 轻量键值存储
         MMKV.initialize(this)
 
-        // Initialize other singleton managers if needed
+        // 依赖注入容器
+        startKoin {
+            androidContext(this@WuHenApp)
+            modules(appModule)
+        }
+
+        // 注册各平台解析器
         PlatformRegistry.init()
     }
 }

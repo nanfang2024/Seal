@@ -1,197 +1,121 @@
 package com.wu.hen.platform.common
 
 import com.wu.hen.data.models.VideoInfo
-import com.wu.hen.WuHenApp
 
 /**
- * Registry pattern for managing multiple platform parsers
- * Singleton to ensure single instance of registry
+ * 平台解析器注册表：按 URL 模式路由到对应平台的解析器。
  */
 class PlatformRegistry private constructor() {
 
-    /**
-     * Map of platform name to parser instance
-     */
-    private val parsers = mutableMapOf<String, VideoPlatformParser>()
+    private val parsers = LinkedHashMap<String, VideoPlatformParser>()
 
     init {
         registerAllParsers()
     }
 
-    /**
-     * Register all available platform parsers
-     */
     private fun registerAllParsers() {
-        // Douyin parser placeholder
-        // addParser(DouyinParser())
-
-        // Kuaishou parser placeholder
-        // addParser(KuaishouParser())
-
-        // Bilibili parser placeholder
-        // addParser(BilibiliParser())
-
-        // Xiaohongshu parser placeholder
-        // addParser(XiaohongshuParser())
-
-        // Pipixia parser placeholder
-        // addParser(PipixiaParser())
+        addParser(DouyinParser())
+        addParser(KuaishouParser())
+        addParser(BilibiliParser())
+        addParser(XiaohongshuParser())
+        addParser(PipixiaParser())
     }
 
-    /**
-     * Add a new parser to the registry
-     */
     fun addParser(parser: VideoPlatformParser) {
         parsers[parser.platformName] = parser
     }
 
-    /**
-     * Find appropriate parser for given URL
-     * @return The matching parser or null if no parser found
-     */
-    fun findParserForUrl(url: String): VideoPlatformParser? {
-        return parsers.values.find { it.canParse(url) }
-    }
+    /** 按链接找到合适的解析器 */
+    fun findParserForUrl(url: String): VideoPlatformParser? =
+        parsers.values.find { it.canParse(url) }
 
-    /**
-     * Get all registered parsers
-     */
-    fun getAllParsers(): List<VideoPlatformParser> {
-        return parsers.values.toList()
-    }
+    fun getAllParsers(): List<VideoPlatformParser> = parsers.values.toList()
 
-    /**
-     * Check if a specific platform is available
-     */
-    fun isPlatformAvailable(platformName: String): Boolean {
-        return parsers.keys.contains(platformName)
-    }
+    fun isPlatformAvailable(platformName: String): Boolean = platformName in parsers
 
-    /**
-     * Parse video using appropriate parser
-     * @param url The video URL to parse
-     * @return Result containing parsed VideoInfo or error
-     */
+    /** 解析视频链接 */
     suspend fun parseVideo(url: String): Result<VideoInfo> {
-        val parser = findParserForUrl(url)
-            ?: return Result.failure(ParseException("No suitable parser found for URL: $url"))
-
-        try {
-            return parser.parse(url)
-        } catch (e: Exception) {
-            return Result.failure(e)
-        }
+        val parser =
+            findParserForUrl(url)
+                ?: return Result.failure(ParseException("暂不支持该链接对应的平台：$url"))
+        return runCatching { parser.parse(url).getOrThrow() }
     }
 
-    /**
-     * Get count of registered parsers
-     */
-    fun parserCount(): Int {
-        return parsers.size
-    }
+    fun parserCount(): Int = parsers.size
 
-    /**
-     * Clear all parsers (useful for testing)
-     */
     fun clearAll() {
         parsers.clear()
     }
 
     companion object {
-        @Volatile
-        private var INSTANCE: PlatformRegistry? = null
+        @Volatile private var INSTANCE: PlatformRegistry? = null
 
-        /**
-         * Get singleton instance of PlatformRegistry
-         */
-        fun init() {
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: PlatformRegistry().also { INSTANCE = it }
-            }
-        }
+        /** 初始化（幂等） */
+        fun init(): PlatformRegistry =
+            INSTANCE
+                ?: synchronized(this) {
+                    INSTANCE ?: PlatformRegistry().also { INSTANCE = it }
+                }
 
-        /**
-         * Get current instance (must call init() first)
-         */
         val current: PlatformRegistry
-            get() = INSTANCE ?: throw IllegalStateException("PlatformRegistry not initialized")
+            get() =
+                INSTANCE
+                    ?: throw IllegalStateException("PlatformRegistry 尚未初始化，请先调用 init()")
 
-        /**
-         * Convenience method for parsing without explicit registry reference
-         */
-        suspend fun parseVideo(url: String): Result<com.wu.hen.data.models.VideoInfo> {
-            return current.parseVideo(url)
-        }
+        suspend fun parseVideo(url: String): Result<VideoInfo> = current.parseVideo(url)
     }
 }
 
-// Placeholder parser implementations (will be implemented in later steps)
+/** 各平台解析器的中间基类 */
+abstract class PlatformBaseParser(platformName: String) : BaseParser(platformName)
 
-abstract class PlatformBaseParser(
-    override val platformName: String
-) : BaseParser(platformName)
-
-// Placeholder for Douyin parser
+/** 抖音 / TikTok 中国版 */
 class DouyinParser : PlatformBaseParser("douyin") {
-    override fun getUrlPatterns(): List<String> {
-        return listOf(
-            ".*(?i)(www\\.)?(douyin\\.com|iesdouyin\\.com).*"
-        )
-    }
+    override fun getUrlPatterns(): List<String> =
+        listOf("(?i)(douyin|iesdouyin)\\.com")
 
-    override suspend fun parse(videoUrl: String): Result<com.wu.hen.data.models.VideoInfo> {
-        TODO("Implement Douyin parsing logic")
+    override suspend fun parse(videoUrl: String): Result<VideoInfo> {
+        // Phase 3 接入真实解析逻辑
+        return Result.failure(ParseException("抖音解析暂未实现"))
     }
 }
 
-// Placeholder for Kuaishou parser
+/** 快手 */
 class KuaishouParser : PlatformBaseParser("kuaishou") {
-    override fun getUrlPatterns(): List<String> {
-        return listOf(
-            ".*(?i)(www\\.)?(kuaishou\\.com|ks.*)*"
-        )
-    }
+    override fun getUrlPatterns(): List<String> =
+        listOf("(?i)(kuaishou|chenzhongtech|gifshow)\\.com")
 
-    override suspend fun parse(videoUrl: String): Result<com.wu.hen.data.models.VideoInfo> {
-        TODO("Implement Kuaishou parsing logic")
+    override suspend fun parse(videoUrl: String): Result<VideoInfo> {
+        return Result.failure(ParseException("快手解析暂未实现"))
     }
 }
 
-// Placeholder for Bilibili parser
+/** 哔哩哔哩 */
 class BilibiliParser : PlatformBaseParser("bilibili") {
-    override fun getUrlPatterns(): List<String> {
-        return listOf(
-            ".*(?i)(www\\.)?bilibili\\.com.*"
-        )
-    }
+    override fun getUrlPatterns(): List<String> =
+        listOf("(?i)(bilibili|b23\\.tv|bilivideo)\\.(com|cn)")
 
-    override suspend fun parse(videoUrl: String): Result<com.wu.hen.data.models.VideoInfo> {
-        TODO("Implement Bilibili parsing logic")
+    override suspend fun parse(videoUrl: String): Result<VideoInfo> {
+        return Result.failure(ParseException("哔哩哔哩解析暂未实现"))
     }
 }
 
-// Placeholder for Xiaohongshu parser
+/** 小红书 */
 class XiaohongshuParser : PlatformBaseParser("xiaohongshu") {
-    override fun getUrlPatterns(): List<String> {
-        return listOf(
-            ".*(?i)(www\\.)?(xhslink\\.com|xiaohongshu\\.com).*"
-        )
-    }
+    override fun getUrlPatterns(): List<String> =
+        listOf("(?i)(xiaohongshu|xhslink)\\.com")
 
-    override suspend fun parse(videoUrl: String): Result<com.wu.hen.data.models.VideoInfo> {
-        TODO("Implement Xiaohongshu parsing logic")
+    override suspend fun parse(videoUrl: String): Result<VideoInfo> {
+        return Result.failure(ParseException("小红书解析暂未实现"))
     }
 }
 
-// Placeholder for Pipixia parser
+/** 皮皮虾 */
 class PipixiaParser : PlatformBaseParser("pipixia") {
-    override fun getUrlPatterns(): List<String> {
-        return listOf(
-            ".*(?i)(www\\.)?(pipixia\\.com).*"
-        )
-    }
+    override fun getUrlPatterns(): List<String> =
+        listOf("(?i)(pipixia|pipix)\\.(com|cn)")
 
-    override suspend fun parse(videoUrl: String): Result<com.wu.hen.data.models.VideoInfo> {
-        TODO("Implement Pipixia parsing logic")
+    override suspend fun parse(videoUrl: String): Result<VideoInfo> {
+        return Result.failure(ParseException("皮皮虾解析暂未实现"))
     }
 }
